@@ -1,0 +1,47 @@
+import requests
+import json
+
+# ✅ Your actual API key
+API_KEY = '9c2395f98c4a011bd988303003754259'
+
+# ✅ Webhook for soccer channel
+SOCCER_WEBHOOK = 'https://discord.com/api/webhooks/1354441501844963438/U42HODQCGpYSyHnvAZ_j2Mh0pQL00oFFRWNPD7A3yLE3oGtUJ6Hr0F5vOj816I2A7VEy'
+
+# ⚽ Send soccer odds to Discord
+def send_soccer_odds():
+    url = "https://api.the-odds-api.com/v4/sports/soccer_epl/odds"
+    params = {
+        'regions': 'au',
+        'markets': 'h2h',
+        'oddsFormat': 'decimal',
+        'apiKey': API_KEY
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    if not isinstance(data, list):
+        print("API Error:", data)
+        return
+
+    for match in data[:3]:  # Limit to top 3
+        home = match['home_team']
+        away = match['away_team']
+        bookmaker = match['bookmakers'][0]
+        bookie_name = bookmaker['title']
+        outcomes = bookmaker['markets'][0]['outcomes']
+
+        message = (
+            f"⚽ **{home} vs {away}**\n"
+            f"🏦 Bookie: {bookie_name}\n"
+            f"🔹 {outcomes[0]['name']}: {outcomes[0]['price']}\n"
+            f"🔸 {outcomes[1]['name']}: {outcomes[1]['price']}\n"
+        )
+
+        payload = {"content": message}
+        headers = {"Content-Type": "application/json"}
+
+        requests.post(SOCCER_WEBHOOK, data=json.dumps(payload), headers=headers)
+
+# ✅ Run the bot
+send_soccer_odds()
